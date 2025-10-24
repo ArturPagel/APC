@@ -368,14 +368,18 @@ def excluir_pvp(cod):
 
 
 
-# --- CRUD para categoria ---
+# --- CRUD Categorias de Produtos ---
 @admin_bp.route('/categorias')
 @admin_required
 def categorias():
-    """ Rota para listar todas as categorias. """
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM categoria_produto ORDER BY nome_categoria ASC")
+    cursor.execute("""
+        SELECT c.*, p.nome_pvp, p.percentual
+        FROM categoria_produto c
+        JOIN pvp p ON c.pvp_categoria = p.cod_pvp
+        ORDER BY c.nome_categoria ASC
+    """)
     lista_categorias = cursor.fetchall()
     cursor.close()
     conn.close()
@@ -384,7 +388,7 @@ def categorias():
 
 @admin_bp.route('/categorias/cadastrar', methods=['GET', 'POST'])
 @admin_required
-def cadastrar_categorias():
+def cadastrar_categoria():
     """ Rota para cadastrar um novo categorias. """
     if request.method == 'POST':
         nome = request.form['nome_categorias']
@@ -412,13 +416,13 @@ def cadastrar_categorias():
         flash("PVP cadastrado com sucesso!", "sucesso")
         return redirect(url_for('admin.categorias'))
 
-    return render_template('categorias.html')
+    return render_template('cadastrar_categoria.html')
 
 
 
 @admin_bp.route('/categorias/editar/<int:cod>', methods=['GET', 'POST'])
 @admin_required
-def editar_categorias(cod):
+def editar_categoria(cod):
     """ Rota para editar um categorias existente. """
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor(dictionary=True)
@@ -468,7 +472,7 @@ def editar_categorias(cod):
 
 @admin_bp.route('/categorias/excluir/<int:cod>', methods=['POST'])
 @admin_required
-def excluir_categorias(cod):
+def excluir_categoria(cod):
     """ Rota para excluir uma categoria. """
     try:
         conn = mysql.connector.connect(**db_config)
